@@ -12,10 +12,10 @@ public class GameStartJFrame extends JFrame {
     }
 
     private void init() {
-        setTitle("贪吃蛇-Version 1.0 ");
+        setTitle("贪吃蛇-Version 1.0  by-帅帅付 ");
         setVisible(true);
         //这个大小也适合小蛇身体25*25
-        setBounds(10, 10, 900, 720);
+        setBounds(320, 100, 900, 720);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
         Container c = getContentPane();

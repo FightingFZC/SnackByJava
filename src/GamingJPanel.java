@@ -1,9 +1,17 @@
+import util.DBUtil;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Objects;
 import java.util.Random;
 
@@ -20,6 +28,7 @@ public class GamingJPanel extends JPanel implements ActionListener, KeyListener 
     Random rf = new Random();
     boolean isStart, isFail;
     String fx = null;
+    String username;
 
     public GamingJPanel() {
         init();
@@ -40,13 +49,14 @@ public class GamingJPanel extends JPanel implements ActionListener, KeyListener 
         snackX[1] = 75;
         snackY[1] = 100;
 
-        //接下来初始化食物
+        //接下来初始化食物的位置，要显示出来还是需要paintComponent方法
         foodX = 50 + 25 * rf.nextInt(32);
         foodY = 100 + 25 * rf.nextInt(23);
 
     }
 
     @Override
+    //画容器
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         this.setBackground(Color.WHITE);
@@ -104,6 +114,33 @@ public class GamingJPanel extends JPanel implements ActionListener, KeyListener 
             if (snackX[0] > 850 || snackX[0] < 25 || snackY[0] > 650 || snackY[0] < 75) {
                 isFail = true;
                 isStart = false;
+
+                //现在还需要记录时间和分数
+                //先读取本地临时文件的用户名是什么
+                try {
+                    FileReader reader = new FileReader("username.txt");
+                    BufferedReader bufferedReader = new BufferedReader(reader);
+                    username = bufferedReader.readLine();
+
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+
+                //开始JDBC往数据库写记录
+                Connection connection = null;
+                Statement statement = null;
+                try {
+                    connection = DBUtil.getConnection();
+                    statement = connection.createStatement();
+                    statement.executeUpdate("insert into data values(" +
+                            username + ",now()" + "," + score + ")");
+                } catch (SQLException exception) {
+                    exception.printStackTrace();
+                } finally {
+                    DBUtil.close(statement);
+                    DBUtil.close(connection);
+                }
+
             }
 
             //判断吃东西
@@ -141,7 +178,7 @@ public class GamingJPanel extends JPanel implements ActionListener, KeyListener 
             //相对于视频的代码身体的前进的代码是放在前面的
             //因为不晓得为什么我这里吃一个东西，长度++，然后就会在0,0处也画个身体，直到
             //这个前进代码再次执行才会把那个身体画到蛇身后
-
+            //解决了
             repaint();
         }
         timer.start();
@@ -162,7 +199,9 @@ public class GamingJPanel extends JPanel implements ActionListener, KeyListener 
                 Container c = getParent();
                 c.remove(this);
                 c.add(new GameStartJPanel());
+                c.validate();
                 c.repaint();
+
             }
         }
 
@@ -194,4 +233,6 @@ public class GamingJPanel extends JPanel implements ActionListener, KeyListener 
     @Override
     public void keyReleased(KeyEvent e) {
     }
+
+
 }
